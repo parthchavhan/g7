@@ -1,11 +1,7 @@
-
 import re
 
-def process_file(file_path):
-    """Cleans the _chat.txt file by removing unwanted characters and modifying the structure."""
-    try:
-        with open(file_path, 'r', encoding='utf-8') as file:
-            content = file.read()
+def process_file(txt_data):
+
 
         # Step 1: Remove emojis using regex (same as before)
         emoji_pattern = re.compile(
@@ -14,7 +10,7 @@ def process_file(file_path):
             "\U0001FA70-\U0001FAFF\U00002702-\U000027B0\U000024C2-\U0001F251]+",
             flags=re.UNICODE
         )
-        cleaned_content = re.sub(emoji_pattern, '', content)
+        cleaned_content = re.sub(emoji_pattern, '', txt_data)
 
         # Step 2: Remove asterisks (*)
         cleaned_content = cleaned_content.replace('*', '')
@@ -29,14 +25,9 @@ def process_file(file_path):
         cleaned_content = re.sub(r'\[.*?\]', '\n', cleaned_content)
 
 
-        # Save cleaned content back to file
-        with open(file_path, 'w', encoding='utf-8') as file:
-            file.write(cleaned_content)
-
         print("File processed successfully.")
+        return cleaned_content
 
-    except Exception as e:
-        print(f"Error processing the file: {e}")
 
 
 
