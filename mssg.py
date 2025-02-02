@@ -1,0 +1,393 @@
+import google.generativeai as genai
+import json
+import re
+
+# Sample JSON data for vehicles
+VEHICLE_DATA = [
+    [
+        {
+            "vehicle_name": "Courier",
+            "img": "R.drawable.courier",
+            "vehicle_info": "Parcel\nDelivery",
+            "vehicle_range": 50,
+            "vehicle_fee": 10,
+            "group": "Courier",
+            "type": "T",
+            "vehicle_id": 34
+        },
+        {
+            "vehicle_name": "Tempoo",
+            "img": "R.drawable.mini_truck",
+            "vehicle_info": "3-4 Wheeler\n300Kg - 1 Ton",
+            "vehicle_range": 30,
+            "vehicle_fee": 10,
+            "group": "Compact",
+            "type": "T",
+            "vehicle_id": 0,
+
+        },
+        {
+            "vehicle_name": "Bolero",
+            "img": "R.drawable.bolero",
+            "vehicle_info": "4 Wheeler\n1.5 Ton",
+            "vehicle_range": 40,
+            "vehicle_fee": 15,
+            "group": "Compact",
+            "type": "T",
+            "vehicle_id": 1
+        },
+        {
+            "vehicle_name": "Tata 407",
+            "img": "R.drawable.tata_407",
+            "vehicle_info": "4 Wheeler\n2.5 Ton",
+            "vehicle_range": 50,
+            "vehicle_fee": 45,
+            "group": "MiniTruck",
+            "type": "T",
+            "vehicle_id": 2
+        },
+        {
+            "vehicle_name": "Truck",
+            "img": "R.drawable.truck_centre",
+            "vehicle_info": "14 FT\n4 Ton",
+            "vehicle_range": 80,
+            "vehicle_fee": 60,
+            "group": "MiniTruck",
+            "type": "T",
+            "vehicle_id": 3
+        },
+        {
+            "vehicle_name": "Truck",
+            "img": "R.drawable.truck_lpt",
+            "vehicle_info": "17 FT\n5 Ton",
+            "vehicle_range": 80,
+            "vehicle_fee": 60,
+            "group": "Truck",
+            "type": "T",
+            "vehicle_id": 4
+        },
+        {
+            "vehicle_name": "Truck",
+            "img": "R.drawable.truck_lpt",
+            "vehicle_info": "19 FT\n6-9 Ton",
+            "vehicle_range": 80,
+            "vehicle_fee": 60,
+            "group": "Truck",
+            "type": "T",
+            "vehicle_id": 5
+        },
+        {
+            "vehicle_name": "Truck",
+            "img": "R.drawable.truck_lpt_1109",
+            "vehicle_info": "6 TYRE\n9-12 Ton",
+            "vehicle_range": 100,
+            "vehicle_fee": 80,
+            "group": "Toursh",
+            "type": "T",
+            "vehicle_id": 6,
+
+        },
+        {
+            "vehicle_name": "Brokers",
+            "img": "R.drawable.logo_transporters",
+            "vehicle_info": "&\nTransporters",
+            "vehicle_range": 150,
+            "vehicle_fee": 80,
+            "group": "Transporter",
+            "type": "T",
+            "vehicle_id": 37,
+
+        },
+        {
+            "vehicle_name": "Truck",
+            "img": "R.drawable.truck_lpt_1109",
+            "vehicle_info": "10 TYRE\n16-20 Ton",
+            "vehicle_range": 100,
+            "vehicle_fee": 80,
+            "group": "Toursh",
+            "type": "T",
+            "vehicle_id": 7
+        },
+        {
+            "vehicle_name": "Truck",
+            "img": "R.drawable.truck_lp",
+            "vehicle_info": "12 TYRE\n21-25 Ton",
+            "vehicle_range": 100,
+            "vehicle_fee": 80,
+            "group": "Toursh",
+            "type": "T",
+            "vehicle_id": 8
+        },
+        {
+            "vehicle_name": "Truck",
+            "img": "R.drawable.truck_toursh",
+            "vehicle_info": "14 TYRE\n25-30 Ton",
+            "vehicle_range": 100,
+            "vehicle_fee": 100,
+            "group": "Toursh",
+            "type": "T",
+            "vehicle_id": 9
+        },
+        {
+            "vehicle_name": "Truck",
+            "img": "R.drawable.truck_lp",
+            "vehicle_info": "16 TYRE\n31-34 Ton",
+            "vehicle_range": 120,
+            "vehicle_fee": 120,
+            "group": "BTruck",
+            "type": "T",
+            "vehicle_id": 38
+        },
+        {
+            "vehicle_name": "Truck",
+            "img": "R.drawable.truck_big",
+            "vehicle_info": "18 TYRE\n35-38 Ton",
+            "vehicle_range": 120,
+            "vehicle_fee": 120,
+            "group": "BTruck",
+            "type": "T",
+            "vehicle_id": 10
+        },
+        {
+            "vehicle_name": "Truck",
+            "img": "R.drawable.truck_extra_big",
+            "vehicle_info": "22 TYRE\n38-42 Ton",
+            "vehicle_range": 120,
+            "vehicle_fee": 120,
+            "group": "BTruck",
+            "type": "T",
+            "vehicle_id": 11
+        },
+        {
+            "vehicle_name": "Trailer",
+            "img": "R.drawable.trailer_high_bed",
+            "vehicle_info": " High Bed\n20-50 Ton",
+            "vehicle_range": 150,
+            "vehicle_fee": 150,
+            "group": "Trailer",
+            "type": "T",
+            "vehicle_id": 12
+        },
+        {
+            "vehicle_name": "Trailer",
+            "img": "R.drawable.trailer_low_bed",
+            "vehicle_info": " Flat Bed\n20-50 Ton",
+            "vehicle_range": 150,
+            "vehicle_fee": 150,
+            "group": "Trailer",
+            "type": "T",
+            "vehicle_id": 13
+        },
+        {
+            "vehicle_name": "Trailer",
+            "img": "R.drawable.trailer_semi_bed",
+            "vehicle_info": " Semi Bed\n20-50 Ton",
+            "vehicle_range": 150,
+            "vehicle_fee": 150,
+            "group": "Trailer",
+            "type": "T",
+            "vehicle_id": 14
+        },
+        {
+            "vehicle_name": "Container",
+            "img": "R.drawable.container_4",
+            "vehicle_info": "20 FT\n5-10 Ton",
+            "vehicle_range": 100,
+            "vehicle_fee": 100,
+            "group": "Container",
+            "type": "T",
+            "vehicle_id": 15,
+
+        },
+        {
+            "vehicle_name": "Container",
+            "img": "R.drawable.container_5",
+            "vehicle_info": "24 FT\n9-14 Ton",
+            "vehicle_range": 100,
+            "vehicle_fee": 100,
+            "group": "Container",
+            "type": "T",
+            "vehicle_id": 16
+        },
+        {
+            "vehicle_name": "Container",
+            "img": "R.drawable.container_6",
+            "vehicle_info": "32 FT\n7-20 Ton",
+            "vehicle_range": 100,
+            "vehicle_fee": 100,
+            "group": "Container",
+            "type": "T",
+            "vehicle_id": 17
+        },
+        {
+            "vehicle_name": "Container",
+            "img": "R.drawable.container_7",
+            "vehicle_info": "33 FT",
+            "vehicle_range": 100,
+            "vehicle_fee": 100,
+            "group": "Container",
+            "type": "T",
+            "vehicle_id": 18
+        },
+        {
+            "vehicle_name": "Container",
+            "img": "R.drawable.container_8",
+            "vehicle_info": "Above 33 FT",
+            "vehicle_range": 100,
+            "vehicle_fee": 100,
+            "group": "Container",
+            "type": "T",
+            "vehicle_id": 19
+        },
+        {
+            "vehicle_name": "Crane",
+            "img": "R.drawable.vehicle_crane",
+            "vehicle_info": "Any Type",
+            "vehicle_range": 80,
+            "vehicle_fee": 100,
+            "group": "Others",
+            "type": "T",
+            "vehicle_id": 36
+        },
+        {
+            "vehicle_name": "Tipper",
+            "img": "R.drawable.truck_lp",
+            "vehicle_info": "ANY",
+            "vehicle_range": 100,
+            "vehicle_fee": 100,
+            "group": "Tipper",
+            "type": "T",
+            "vehicle_id": 35
+        },
+        {
+            "vehicle_name": "Tanker",
+            "img": "R.drawable.container_4",
+            "vehicle_info": "ANY",
+            "vehicle_range": 200,
+            "vehicle_fee": 100,
+            "group": "Tanker",
+            "type": "T",
+            "vehicle_id": 20
+        },
+        {
+            "vehicle_name": "Refrigerator",
+            "img": "R.drawable.container_5",
+            "vehicle_info": " Truck",
+            "vehicle_range": 200,
+            "vehicle_fee": 100,
+            "group": "AC",
+            "type": "T",
+            "vehicle_id": 21
+        },
+        {
+            "vehicle_name": "Tractor",
+            "img": "R.drawable.tractor",
+            "vehicle_info": "ANY",
+            "vehicle_range": 100,
+            "vehicle_fee": 45,
+            "group": "Others",
+            "type": "T",
+            "vehicle_id": 22
+        },
+        {
+            "vehicle_name": "JCB",
+            "img": "R.drawable.jcb",
+            "vehicle_info": "ANY",
+            "vehicle_range": 100,
+            "vehicle_fee": 150,
+            "group": "Others",
+            "type": "T",
+            "vehicle_id": 23
+        }
+    ]
+]
+
+def process_file_with_gemini(file_path, api_key):
+    # Configure the Gemini AI client
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel(model_name="gemini-1.5-flash")
+
+    # Read the entire file content
+    with open(file_path, 'r', encoding='utf-8') as file:
+        file_content = file.read()
+
+    # Prompt for extracting details
+    prompt = f""" take your time and dont miss anything read the data correctly and try not to make any errors
+    one more thing 
+The input contains chat messages related to logistics and transport. For each message, extract the following details :
+- pickup_address (if possible write in english use translator)
+- drop_address (if possible write in english use translator)
+- vehicle_name 
+- vehicle_id (fron the json data)
+- vehicle_type (T by default)
+- vehicle_info (same as vehicle name)
+- vehicle_range (fron the json data)
+- vehicle_fee (fron the json data)
+- pickup_city
+- drop_city
+- part_full_load (full by default)
+- no_of_vehicles (1 by default)
+- contact_mobile (take only 1 phone number)
+- vehicles_needed ( the vehicle is required or its available)
+
+If any vehicle-related detail is missing, supplement it using the following JSON data:
+{json.dumps(VEHICLE_DATA, indent=4)}
+
+Input: {file_content}
+"""
+
+    # Send the file content as a prompt to Gemini AI
+    response = model.generate_content(prompt)
+
+    return response.text.strip()
+
+
+
+def process_file(file_path):
+    try:
+        # Open the original file and read the content
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+
+        # Regex pattern to match most emojis
+        emoji_pattern = re.compile(
+            "[\U0001F600-\U0001F64F|\U0001F300-\U0001F5FF|\U0001F680-\U0001F6FF|\U0001F700-\U0001F77F|\U0001F780-\U0001F7FF|\U0001F800-\U0001F8FF|\U0001F900-\U0001F9FF|\U0001FA00-\U0001FA6F|\U0001FA70-\U0001FAFF|\U00002702-\U000027B0|\U000024C2-\U0001F251]+",
+            flags=re.UNICODE)
+
+        # Remove emojis from the content
+        cleaned_content = re.sub(emoji_pattern, '', content)
+
+        # Remove all asterisks (*)
+        cleaned_content = cleaned_content.replace('*', '')
+
+        # Remove double spaces (replace with a single space)
+        cleaned_content = re.sub(r'\s{2,}', ' ', cleaned_content)
+
+        # # Remove date patterns like [16/01/25, 12:59:31]
+        # cleaned_content = re.sub(r'\[\d{2}/\d{2}/\d{2}, \d{2}:\d{2}:\d{2}\]', '', cleaned_content)
+        #
+        # # Remove patterns like _ * and * _
+        # cleaned_content = re.sub(r'_\s?\*|\*\s?_', '', cleaned_content)
+
+        # Save the cleaned content back to the file
+        with open(file_path, 'w', encoding='utf-8') as file:
+            file.write(cleaned_content)
+
+        print("File processed successfully.")
+
+    except Exception as e:
+        print(f"Error processing the file: {e}")
+
+
+
+file_path = '_chat.txt'
+process_file(file_path)
+api_key = 'AIzaSyCQiR51-LnjvfUuAwQstQ7l7ePlBSF6-1k'  # Replace with your API key
+
+# Process the file
+response = process_file_with_gemini(file_path, api_key)
+
+
+with open("processed_data.txt", "w") as file:
+    file.write("Processed Data:\n")
+    file.write(response)
