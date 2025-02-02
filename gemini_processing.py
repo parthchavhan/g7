@@ -4,13 +4,8 @@ from vehicle_data import VEHICLE_DATA
 from dotenv import load_dotenv
 import os
 
-# Load environment variables from .env file
+
 load_dotenv()
-
-# Access the API key
-
-
-
 
 def process_text_with_gemini(text):
     """Sends the cleaned text to Gemini AI for extraction."""
@@ -37,7 +32,7 @@ def process_text_with_gemini(text):
     - no_of_vehicles (1 by default)
     - contact_mobile (take only 1 phone number cant be null)
     - vehicles_needed ( the vehicle is required or its available by default required)
-    if pickup_address, drop_address or contact_mobile any one of them is missing is null or not specified dont add that data
+    if pickup_address, drop_address or contact_mobile any one of them is missing is null or not specified dont add these data
     If any vehicle-related detail is missing, supplement it using the following JSON data:
     {json.dumps(VEHICLE_DATA, indent=4)}
     be sure i want no data with null dont add that data that has things missing 
