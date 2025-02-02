@@ -7,7 +7,7 @@ from vehicle_data import VEHICLE_DATA
 def process_text_with_gemini(text):
     """Sends the cleaned text to Gemini AI for extraction."""
 
-    api_key = 'AIzaSyCQiR51-LnjvfUuAwQstQ7l7ePlBSF6-1k'
+    api_key = hui_hui
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
