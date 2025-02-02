@@ -15,7 +15,7 @@ load_dotenv()
 def process_text_with_gemini(text):
     """Sends the cleaned text to Gemini AI for extraction."""
 
-    api_key = os.getenv('hui-hui')
+    api_key = os.getenv('hui_hui')
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 

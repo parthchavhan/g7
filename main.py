@@ -1,22 +1,13 @@
 import re
-from flask import Flask, request, render_template
-import os
-import json
 import zipfile
-from file_processing import process_file
-from file_processing import clean_json
+from io import BytesIO
+from flask import Flask, request, render_template
+import json
 import requests
+from file_processing import process_file, clean_json
 from gemini_processing import process_text_with_gemini
 
 app = Flask(__name__)
-
-# Define folders
-UPLOAD_FOLDER = "uploads"
-EXTRACT_FOLDER = "extracted"
-
-# Ensure directories exist
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(EXTRACT_FOLDER, exist_ok=True)
 
 # Send content to external API
 def send_to_api(content):
@@ -33,71 +24,54 @@ def send_to_api(content):
         return f"Failed to send content: {e}"
 
 # Process in chunks function
-def process_in_chunks(txt_path, chunk_size=150):
-    # Open file and read lines
-    with open(txt_path, "r", encoding="utf-8") as file:
-        lines = file.readlines()
-
+def process_in_chunks(txt_data, chunk_size=150):
     # Initialize results
     results = []
 
     # Process lines in chunks
+    lines = txt_data.splitlines()
+
     while lines:
         # Read the next chunk
         chunk = lines[:chunk_size]
         lines = lines[chunk_size:]  # Remove the processed lines
 
         # Join the chunk into a string
-        chunk_text = ''.join(chunk)
+        chunk_text = '\n'.join(chunk)
 
         # Process chunk with Gemini
         processed_data = process_text_with_gemini(chunk_text)
-        processed_data=clean_json(processed_data)
+        processed_data = clean_json(processed_data)
 
         # Store processed result
         results.append(processed_data)
-
-        # Optionally, you can delete the processed lines from the file
-        with open(txt_path, "w", encoding="utf-8") as file:
-            file.writelines(lines)
 
     return results
 
 @app.route("/", methods=["GET", "POST"])
 def upload_file():
     if request.method == "POST" and "file" in request.files:
-        if "file" not in request.files:
-            return "No file part"
-
         file = request.files["file"]
-        if file.filename == "":
-            return "No selected file"
-
         if not file.filename.endswith(".zip"):
             return "Please upload a ZIP file"
 
-        # Save uploaded ZIP
-        zip_path = os.path.join(UPLOAD_FOLDER, file.filename)
-        file.save(zip_path)
+        # Read the ZIP file into memory
+        zip_data = file.read()
+        zip_file = zipfile.ZipFile(BytesIO(zip_data), 'r')
 
-        # Extract ZIP
-        with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall(EXTRACT_FOLDER)
-
-        txt_path = os.path.join(EXTRACT_FOLDER, "_chat.txt")
-
-        if not os.path.exists(txt_path):
+        # Check if _chat.txt exists in the ZIP file
+        if "_chat.txt" not in zip_file.namelist():
             return "No _chat.txt found in the ZIP file"
 
-        # Clean the extracted file
-        process_file(txt_path)
+        # Extract the content of _chat.txt
+        with zip_file.open("_chat.txt") as txt_file:
+            txt_data = txt_file.read().decode('utf-8')
+
+        # Clean the extracted content
+        process_file(txt_data)
 
         # Process the file in chunks
-        processed_results = process_in_chunks(txt_path)
-
-        # Remove files after processing
-        os.remove(txt_path)
-        os.remove(zip_path)
+        processed_results = process_in_chunks(txt_data)
 
         # Combine all processed results into a single response
         final_result = '\n'.join(processed_results)
