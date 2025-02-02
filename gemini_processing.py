@@ -1,13 +1,21 @@
 import google.generativeai as genai
 import json
 from vehicle_data import VEHICLE_DATA
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Access the API key
+
 
 
 
 def process_text_with_gemini(text):
     """Sends the cleaned text to Gemini AI for extraction."""
 
-    api_key = hui_hui
+    api_key = os.getenv('hui-hui')
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
