@@ -1,12 +1,13 @@
+
 import re
 
 def process_file(file_path):
-    """Cleans the _chat.txt file by removing unwanted characters before sending it to Gemini AI."""
+    """Cleans the _chat.txt file by removing unwanted characters and modifying the structure."""
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             content = file.read()
 
-        # Regex pattern to remove emojis
+        # Step 1: Remove emojis using regex (same as before)
         emoji_pattern = re.compile(
             "[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F700-\U0001F77F"
             "\U0001F780-\U0001F7FF\U0001F800-\U0001F8FF\U0001F900-\U0001F9FF\U0001FA00-\U0001FA6F"
@@ -15,11 +16,18 @@ def process_file(file_path):
         )
         cleaned_content = re.sub(emoji_pattern, '', content)
 
-        # Remove asterisks (*)
+        # Step 2: Remove asterisks (*)
         cleaned_content = cleaned_content.replace('*', '')
 
-        # Remove double spaces
+        # Step 3: Remove double spaces
         cleaned_content = re.sub(r'\s{2,}', ' ', cleaned_content)
+
+        # Step 5: Remove all newlines to make the content a single line
+        cleaned_content = cleaned_content.replace('\n', ' ')
+
+        # Step 4: Remove content inside square brackets and replace with a new line
+        cleaned_content = re.sub(r'\[.*?\]', '\n', cleaned_content)
+
 
         # Save cleaned content back to file
         with open(file_path, 'w', encoding='utf-8') as file:
@@ -29,6 +37,7 @@ def process_file(file_path):
 
     except Exception as e:
         print(f"Error processing the file: {e}")
+
 
 
 def clean_json(text_content):

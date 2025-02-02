@@ -24,7 +24,7 @@ def send_to_api(content):
         return f"Failed to send content: {e}"
 
 # Process in chunks function
-def process_in_chunks(txt_data, chunk_size=150):
+def process_in_chunks(txt_data, chunk_size=50):
     # Initialize results
     results = []
 
@@ -68,7 +68,8 @@ def upload_file():
             txt_data = txt_file.read().decode('utf-8')
 
         # Clean the extracted content
-        process_file(txt_data)
+        txt_data = process_file(txt_data)
+
 
         # Process the file in chunks
         processed_results = process_in_chunks(txt_data)
