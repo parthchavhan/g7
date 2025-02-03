@@ -372,6 +372,10 @@ def process_file(file_path):
         cleaned_content = re.sub(r'\[.*?\]', '\n', cleaned_content)
 
 
+        date_pattern = r'\d{2}/\d{2}/\d{4}, \d{1,2}:\d{2}[\u00A0\s]*[ap]m'
+        cleaned_content = re.sub(date_pattern, '\n', cleaned_content)
+
+
 
         # Save cleaned content back to file
         with open(file_path, 'w', encoding='utf-8') as file:
