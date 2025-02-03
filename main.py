@@ -10,12 +10,17 @@ app = Flask(__name__)
 def process_zip_file(zip_data):
     zip_file = zipfile.ZipFile(BytesIO(zip_data), 'r')
 
-    # Check if _chat.txt exists in the ZIP file
-    if "_chat.txt" not in zip_file.namelist():
-        raise FileNotFoundError("No _chat.txt found in the ZIP file")
+    # Find the first .txt file in the ZIP archive
+    txt_files = [file for file in zip_file.namelist() if file.endswith('.txt')]
 
-    # Extract the content of _chat.txt
-    with zip_file.open("_chat.txt") as txt_file:
+    if not txt_files:
+        raise FileNotFoundError("No .txt file found in the ZIP file")
+
+    # Use the first .txt file
+    txt_file_name = txt_files[0]
+
+    # Extract the content of the .txt file
+    with zip_file.open(txt_file_name) as txt_file:
         txt_data = txt_file.read().decode('utf-8')
 
     # Process the file in chunks and return results
@@ -33,13 +38,15 @@ def upload_file():
         zip_data = file.read()
 
         # Extract and process the text file
-        processed_results = process_zip_file(zip_data)
+        try:
+            processed_results = process_zip_file(zip_data)
+            # Combine all processed results into a single response
+            final_result = '\n'.join(processed_results)
+            final_result = clean_json(final_result)
 
-        # Combine all processed results into a single response
-        final_result = '\n'.join(processed_results)
-        final_result = clean_json(final_result)
-
-        return render_template("index.html", content=final_result)
+            return render_template("index.html", content=final_result)
+        except FileNotFoundError as e:
+            return str(e)
 
     return render_template("index.html", content=None)
 
